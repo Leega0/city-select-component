@@ -5,164 +5,25 @@
 	<title>vue2.0</title>
 	<link rel="stylesheet" href="css/zui.min.css">
 </head>
-<script src="../lib/vue2.0.js"></script>
+<script src="../lib/vue2.0.min.js"></script>
 <script src="lib/jquery/jquery.js"></script>
 <body>
 	<div class="container-fluid">
 		<div class="main">
 		<!-- 城市选择 -->
 			<div id="citylist">
-					<input type="hidden" id="recievecity_id" value="1" name="cityselect">
 			</div>
 		</div>
 	</div>
 </body>
-	<script>
-				// 模拟数据请求。
-				var result;
-					$.ajax( {
-					url : 'data/data.json',
-			        type : 'GET',
-			        async : false,
-			        dataType : 'json',
-			        error : function() {
-			            alert('操作出现错误！');
-			        },
-			        success : function(data) {
-			            if (data) {
-			                result= data.data;
-			            } else {
-			            }
-			        }
-			    });
-		// 获取页面层的城市id
-		var recievecity_id = parseInt($("#recievecity_id").val());
-		// 递归查找
-		function getCtiy(data,cityId)
-		    {
-		        for (var i in data) {
-		            if (data[i].id == cityId) {
-		            	// 找到对应id返回此对象。
-		                recieveObj = data[i];
-		                break;
-		            } else {
-		                getCtiy(data[i].child_citys, cityId);
-		            }
-		        }
-		    }
-		// 此段代码跟上段代码逻辑一致，可优化，查到区县，根据id再次递归查找省份。
-		function getProvince(data,cityId){
-			for (var i in data) {
-		            if (data[i].id == cityId) {
-		            	// 找到省份返回此对象。
-		                recieveObjprovince = data[i];
-		                break;
-		            } else {
-		                getProvince(data[i].child_citys, cityId);
-		            }
-		        }
-		}
-		getCtiy(result.citys,recievecity_id);
-
-		// 如对象的为三级结构。
-		if (recieveObj.level===3) {
-							recieveCity = recieveObj.parent_id;
-							getProvince(result.citys,recieveCity);
-							recieveProvince = recieveObjprovince.parent_id;
-							recieveCountry = recieveObj.id;
-						}else if (recieveObj.level===2) {
-							// 对象为二级结构
-							recieveCity = recieveObj.id;
-							recieveProvince = recieveObj.parent_id;
-							recieveCountry = 0;
-						}else{
-							// 对象为一级结构
-							recieveProvince = recieveObj.id;
-							recieveCity = 0;
-							recieveCountry = 0;
-						}
-		// template
-         var citytemplate = '<div class="form-group">'+
-						'<label class="col-md-2 control-label">城市：</label>'+
-						'<div class="col-md-2">'+
-							'<select v-model ="selectedProvinceId" class="form-control" id="rowprovince">'+
-								'<option v-for="province in provinces" :value="province.id">'+
-									'{{province.name}}'+
-								'</option>'+
-							'</select>'+
-						'</div>'+
-						'<div class="col-md-2">'+
-						    '<select class="form-control" v-model="selectedCityId" id="rowcity">'+
-										'<option value="-1">请选择市</option>'+
-										'<option v-for="city in cities" :value="city.id">'+
-									'{{city.name}}'+
-								'</option>'+
-						    '</select>'+
-						'</div>'+
-						'<div class="col-md-2">'+
-						    '<select class="form-control" v-model="selectedCountryId" id="rowcountry">'+
-										'<option value="-1">请选择区县</option>'+
-										'<option v-for="country in countres" :value="country.id">'+
-									'{{country.name}}'+
-								'</option>'+
-						    '</select>'+
-						'</div>'+
-
-					'</div>'
-
-		// vue实例
-		var vm = new Vue({
-			el:'#citylist',
-			data(){
-				return {
-					selectedProvinceId: recieveProvince,
-	      	selectedCityId: -1,
-	        selectedCountryId: -1,
-					provinces: result.citys, // 省
-				}
-			},
-			created:function(){
-				$("#citylist").append(citytemplate);
-			},
-			watch:{
-				selectedProvinceId:function(newselect,oldselect){
-					if (newselect!=oldselect) {
-						vm.selectedCityId = -1
-		        vm.selectedCountryId = -1
-					}
-				},
-				selectedCityId:function(newselect,oldselect){
-					if (newselect!=oldselect) {
-		        vm.selectedCountryId = -1
-					}
-				}
-			},
-			computed:{
-				cities: function() {
-                        var tempcities =[];
-                        //获取市数据
-                        var selectedProvince = this.selectedProvinceId;
-                        this.provinces.forEach(function(d){
-                        	if (d.id == selectedProvince ) {
-                        		tempcities = d.child_citys;
-                        	}
-                        });
-                        return tempcities
-
-                    },
-        countres: function() {
-                        var tempcounres =[];
-                        // 获取区县数据
-												var selectedCity = this.selectedCityId;
-                       this.cities.forEach(function(d){
-                        	if (d.id == selectedCity ) {
-                        		tempcounres = d.child_citys;
-                        	}
-                        });
-                        return tempcounres
-                    }
-			}
-
-		})
-	</script>
+<script src="js/city-select.js"></script>
+<script type="text/javascript">
+/*参数必传，selectId：城市id，没有则为-1，citylevel：组件显示级别
+url:数据请求地址，callback:回调函数。*/
+		selectComponent(2,3,'data/data.json',function(test){
+				 // test为回调函数的结果，即选择后的城市ID，未操作返回 -1;
+				 var selectedId = test;
+				 console.log(selectedId);
+		});
+</script>
 </html>
