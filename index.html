@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>vue1.0</title>
+	<title>vue2.0</title>
 	<link rel="stylesheet" href="css/zui.min.css">
 </head>
-<script src="../lib/vue.js"></script>
+<script src="../lib/vue2.0.js"></script>
 <script src="lib/jquery/jquery.js"></script>
 <body>
 	<div class="container-fluid">
 		<div class="main">
 		<!-- 城市选择 -->
 			<div id="citylist">
-				<input type="hidden" id="recievecity_id" value="1713" name="cityselect">
+					<input type="hidden" id="recievecity_id" value="1" name="cityselect">
 			</div>
-		</div>	
+		</div>
 	</div>
 </body>
 	<script>
@@ -63,7 +63,7 @@
 		        }
 		}
 		getCtiy(result.citys,recievecity_id);
-		
+
 		// 如对象的为三级结构。
 		if (recieveObj.level===3) {
 							recieveCity = recieveObj.parent_id;
@@ -85,7 +85,7 @@
          var citytemplate = '<div class="form-group">'+
 						'<label class="col-md-2 control-label">城市：</label>'+
 						'<div class="col-md-2">'+
-							'<select v-model ="selectedProvinceId" class="form-control">'+
+							'<select v-model ="selectedProvinceId" class="form-control" id="rowprovince">'+
 								'<option v-for="province in provinces" :value="province.id">'+
 									'{{province.name}}'+
 								'</option>'+
@@ -93,14 +93,16 @@
 						'</div>'+
 						'<div class="col-md-2">'+
 						    '<select class="form-control" v-model="selectedCityId" id="rowcity">'+
-						        '<option v-for="city in cities" :value="city.id">'+
+										'<option value="-1">请选择市</option>'+
+										'<option v-for="city in cities" :value="city.id">'+
 									'{{city.name}}'+
 								'</option>'+
 						    '</select>'+
 						'</div>'+
 						'<div class="col-md-2">'+
 						    '<select class="form-control" v-model="selectedCountryId" id="rowcountry">'+
-						        '<option v-for="country in countres" :value="country.id">'+
+										'<option value="-1">请选择区县</option>'+
+										'<option v-for="country in countres" :value="country.id">'+
 									'{{country.name}}'+
 								'</option>'+
 						    '</select>'+
@@ -111,63 +113,56 @@
 		// vue实例
 		var vm = new Vue({
 			el:'#citylist',
-			data:{
-				selectedProvinceId: recieveProvince,
-                selectedCityId: recieveCity,
-                selectedCountryId: recieveCountry,
-				provinces: result.citys, // 省
-                cities: [], // 市
-                countres: [], // 区
+			data(){
+				return {
+					selectedProvinceId: recieveProvince,
+	      	selectedCityId: -1,
+	        selectedCountryId: -1,
+					provinces: result.citys, // 省
+				}
 			},
 			created:function(){
 				$("#citylist").append(citytemplate);
 			},
+			watch:{
+				selectedProvinceId:function(newselect,oldselect){
+					if (newselect!=oldselect) {
+						vm.selectedCityId = -1
+		        vm.selectedCountryId = -1
+					}
+				},
+				selectedCityId:function(newselect,oldselect){
+					if (newselect!=oldselect) {
+		        vm.selectedCountryId = -1
+					}
+				}
+			},
 			computed:{
 				cities: function() {
-                        this.$data.countres = [];
-                        this.$data.cities = [];
                         var tempcities =[];
-                        // 获取市数据
-                        var selectedProvince = this.$data.selectedProvinceId;
-                        this.$data.provinces.forEach(function(d){
+                        //获取市数据
+                        var selectedProvince = this.selectedProvinceId;
+                        this.provinces.forEach(function(d){
                         	if (d.id == selectedProvince ) {
                         		tempcities = d.child_citys;
                         	}
                         });
-                        this.$data.cities = tempcities;
                         return tempcities
-                        
+
                     },
-                    countres: function() {
-                        this.$data.countres = [];
+        countres: function() {
                         var tempcounres =[];
                         // 获取区县数据
-						var selectedCity = this.$data.selectedCityId;
-                       this.$data.cities.forEach(function(d){
+												var selectedCity = this.selectedCityId;
+                       this.cities.forEach(function(d){
                         	if (d.id == selectedCity ) {
                         		tempcounres = d.child_citys;
                         	}
                         });
-                       this.$data.countres = tempcounres;
-                       var selectedCountry = this.$data.selectedCountryId;
-                       
                         return tempcounres
                     }
 			}
-			
+
 		})
-		// 如初始化id传入的参数未找到对应，默认增加请选择。
-		vm.$nextTick(function () {
-			var optiontp = '<option value="-1" selected="selected" class="optiontp">请选择</option>';
-		    if (this.$data.selectedCityId===0) {
-		    	$(".optiontp").remove();
-		    	$("#rowcity").prepend(optiontp)
-		    	$("#rowcountry").prepend(optiontp)
-		    }else
-		    if (this.$data.selectedCountryId===0) {
-		    	$(".optiontp").remove();
-		    	$("#rowcountry").prepend(optiontp);
-		    }
-		  })
 	</script>
 </html>
